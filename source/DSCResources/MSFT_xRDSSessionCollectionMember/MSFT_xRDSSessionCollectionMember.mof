@@ -1,0 +1,8 @@
+[ClassVersion("1.0.0.0"), FriendlyName("xRDSessionCollectionMember")]
+class MSFT_xRDSessionCollectionMember : OMI_BaseResource
+{
+    [key, Description("Specifies an RD Session Host server to managed in the session collection. ")] string SessionHost;
+    [Write, Description("Present if the RemoteApp should exist, Absent if it should be removed"), ValueMap{"Present","Absent"}, Values{"Present","Absent"}] string Ensure;
+    [key, Description("Specifies a name for the session collection. ")] string CollectionName;
+    [key, Description("Specifies the Remote Desktop Connection Broker (RD Connection Broker) server for a Remote Desktop deployment.")] string ConnectionBroker;
+};
