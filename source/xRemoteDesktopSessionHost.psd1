@@ -37,6 +37,7 @@
         'xRDRemoteApp'
         'xRDServer'
         'xRDSessionCollection'
+        'xRDSessionCollectionMember'
         'xRDSessionCollectionConfiguration'
         'xRDsessionDeployment'
     )
