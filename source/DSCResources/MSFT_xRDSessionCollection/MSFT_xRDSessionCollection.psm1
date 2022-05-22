@@ -16,22 +16,59 @@ function Get-TargetResource
     param
     (
         [Parameter(Mandatory = $true)]
-        [ValidateLength(1,256)]
+        [ValidateLength(1, 256)]
         [string] $CollectionName,
         [Parameter(Mandatory = $true)]
         [string] $SessionHost,
+        [Parameter()]
+        [ValidateSet("YES", "NOUNTILREBOOT", "NO", ignorecase = $true)]
+        [String]$NewConnectionAllowed,
         [Parameter()]
         [string] $CollectionDescription,
         [Parameter()]
         [string] $ConnectionBroker
     )
-    Write-Verbose "Getting information about RDSH collection."
-    $Collection = Get-RDSessionCollection -CollectionName $CollectionName -ConnectionBroker $ConnectionBroker -ErrorAction SilentlyContinue
+
+    $script:CollectionExist = $false
+    $script:SessionHostExist = $false
+    $script:ConnectionAllow = $false
+    Write-Verbose "Getting information about RDSH collection"
+    Write-Verbose "Test if Collection $($CollectionName) exist"
+    if ($Collection = Get-RDSessionCollection -ConnectionBroker $ConnectionBroker -ErrorAction SilentlyContinue | Where-Object CollectionName -eq $CollectionName)
+    {
+        Write-Verbose "Collection $($CollectionName) exist"
+        $script:CollectionExist = $true
+        Write-Verbose "Test if server $($SessionHost) is in collection $($CollectionName)"
+        if ($Server = Get-RDSessionHost -CollectionName $CollectionName -ConnectionBroker $ConnectionBroker -ErrorAction SilentlyContinue | Where-Object SessionHost -eq $SessionHost)
+        {
+            Write-verbose "Server $($SessionHost) is in collection $($CollectionName)"
+            $script:SessionHostExist = $true
+            Write-Verbose "Test New Connection allowed Status "
+            if ($Server.NewConnectionAllowed -eq $NewConnectionAllowed)
+            {
+                Write-verbose "New Connection allowed Status is OK"
+                $script:ConnectionAllow = $true
+            }
+            else
+            {
+                Write-verbose "New Connection allowed Status is NOK"
+            }
+        }
+        else
+        {
+            Write-Verbose "Server $($SessionHost) is not in collection $($CollectionName)"
+        }
+    }
+    else
+    {
+        Write-Verbose "Collection $($CollectionName) does not exist"
+    }
     @{
-        "CollectionName" = $Collection.CollectionName
+        "CollectionName"        = $Collection.CollectionName
         "CollectionDescription" = $Collection.CollectionDescription
-        "SessionHost" = $localhost
-        "ConnectionBroker" = $ConnectionBroker
+        "SessionHost"           = $Server.SessionHost
+        "ConnectionBroker"      = $ConnectionBroker
+        "NewConnectionAllowed"  = $Server.NewConnectionAllowed
     }
 }
 
@@ -46,24 +83,40 @@ function Set-TargetResource
     param
     (
         [Parameter(Mandatory = $true)]
-        [ValidateLength(1,256)]
+        [ValidateLength(1, 256)]
         [string] $CollectionName,
         [Parameter(Mandatory = $true)]
         [string] $SessionHost,
+        [Parameter()]
+        [ValidateSet("YES", "NOUNTILREBOOT", "NO", ignorecase = $true)]
+        [String]$NewConnectionAllowed,
         [Parameter()]
         [string] $CollectionDescription,
         [Parameter()]
         [string] $ConnectionBroker
     )
-    Write-Verbose "Creating a new RDSH collection."
-    if ($localhost -eq $ConnectionBroker)
+
+    if (!($script:CollectionExist))
     {
+        Write-Verbose "Creating a new RDSH collection."
+        $PSBoundParameters.Remove('NewConnectionAllowed')
         New-RDSessionCollection @PSBoundParameters
+        $script:CollectionExist = $true
     }
-    else
+
+    if ($script:CollectionExist -and !($script:SessionHostExist))
     {
-        $PSBoundParameters.Remove('CollectionDescription')
-        Add-RDSessionHost @PSBoundParameters
+        Write-Verbose "Adding server to an existing collection."
+        Add-RDSessionHost -CollectionName $CollectionName -SessionHost $SessionHost -ConnectionBroker $ConnectionBroker
+        $script:SessionHostExist = $true
+    }
+
+    if ($script:CollectionExist -and $script:SessionHostExist -and !($script:ConnectionAllow))
+    {
+        Write-Verbose "Update connection allow status"
+        Set-RDSessionHost -SessionHost $SessionHost -ConnectionBroker $ConnectionBroker -NewConnectionAllowed $NewConnectionAllowed
+        $script:ConnectionAllow = $true
+
     }
 }
 
@@ -78,17 +131,21 @@ function Test-TargetResource
     param
     (
         [Parameter(Mandatory = $true)]
-        [ValidateLength(1,256)]
+        [ValidateLength(1, 256)]
         [string] $CollectionName,
         [Parameter(Mandatory = $true)]
         [string] $SessionHost,
+        [Parameter()]
+        [ValidateSet("YES", "NOUNTILREBOOT", "NO", ignorecase = $true)]
+        [String]$NewConnectionAllowed,
         [Parameter()]
         [string] $CollectionDescription,
         [Parameter()]
         [string] $ConnectionBroker
     )
     Write-Verbose "Checking for existence of RDSH collection."
-    $null -ne (Get-TargetResource @PSBoundParameters).CollectionName
+    $currentConfiguration = Get-TargetResource @PSBoundParameters
+    $script:CollectionExist -and $script:SessionHostExist -and $script:ConnectionAllow
 }
 
 
