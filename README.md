@@ -28,6 +28,7 @@ Please check out common DSC Community [contributing guidelines](https://dsccommu
 * **xRDSessionDeployment** creates and configures a deployment in RDSH.
 * **xRDSessionCollection** creates an RDSH collection.
 * **xRDSessionCollectionConfiguration** configures an RDSH collection.
+* **xRDSSessionCollectionMember** Add/Remove host to your collection.
 * **xRDRemoteApp** publishes applications for your RDSH collection.
 * **xRDServer** adds RD Server features to your RDSH deployment.
 * **xRDGatewayConfiguration** creates and configures RD Gateway.
@@ -75,6 +76,13 @@ Please check out common DSC Community [contributing guidelines](https://dsccommu
 * **IncludeFolderPath**: Specifies a list of strings for folders to include in the user profile disk
 * **MaxUserProfileDiskSizeGB**: Specifies the maximum size in GB for a User Profile Disk
 
+### xRDSessionCollectionMember
+
+* **SessionHost**: Specifies the FQDN of a servers to host the RD Session Host role service.
+* **Ensure**: Specifies if the RemoteApp needs to be Present (default) or Absent.
+* **NewConnectionAllowed**: Specifies if connection are allowed to the server
+* **CollectionName**: Specifies a name for the session collection (Max length is 256 characters)
+* **ConnectionBroker**: Specifies the Remote Desktop Connection Broker (RD Connection Broker) server for a Remote Desktop deployment.
 ### xRDRemoteApp
 
 * **Alias**: Specifies an alias for the RemoteApp program.
