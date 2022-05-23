@@ -130,3 +130,5 @@ function Set-TargetResource
         Set-RDSessionHost -SessionHost $currentConfiguration.SessionHost -ConnectionBroker $ConnectionBroker -NewConnectionAllowed $NewConnectionAllowed
     }
 }
+
+Export-ModuleMember -Function *-TargetResource
